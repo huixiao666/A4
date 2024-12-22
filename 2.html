@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="皮卡商店 - 应用下载平台">
+    <title>皮卡商店</title>
+    <style>
+        :root {
+            --primary-color: #333;
+            --background-color: #f5f5f5;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --text-color: #666;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: var(--background-color);
+            line-height: 1.6;
+        }
+
+        .header {
+            position: sticky;
+            top: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background-color: #fff;
+            box-shadow: 0 2px 5px var(--shadow-color);
+            z-index: 1000;
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 0.5rem;
+            flex: 1;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .search-bar input {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .search-bar button {
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .search-bar button:hover {
+            background-color: #0056b3;
+        }
+        
+        
+
+        .nav {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem;
+            background-color: #fff;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .nav a {
+            color: var(--primary-color);
+            text-decoration: none;
+            white-space: nowrap;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .nav a:hover {
+            background-color: #f0f0f0;
+        }
+
+        .app-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+            padding: 1.5rem;
+        }
+
+        .app-item {
+            display: flex;
+            align-items: center;
+            background-color: #fff;
+            border-radius: 12px;
+            padding: 1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .app-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+
+        .app-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 12px;
+            object-fit: cover;
+            margin-right: 1rem;
+        }
+
+        .app-info {
+            flex: 1;
+        }
+
+        .app-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .app-name a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .app-category {
+            font-size: 0.9rem;
+            color: var(--text-color);
+            margin-bottom: 0.25rem;
+        }
+
+        .rating {
+            font-size: 0.9rem;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .floating-button {
+            position: fixed;
+            right: 1.5rem;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #fff;
+            border: none;
+            box-shadow: 0 2px 8px var(--shadow-color);
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .floating-refresh {
+            composes: floating-button;
+            bottom: 5.5rem;
+        }
+
+        .floating-top {
+            composes: floating-button;
+            bottom: 15rem;
+        }
+
+        .floating-button:hover {
+            background-color: #f0f0f0;
+        }
+
+        @media (max-width: 768px) {
+            .app-list {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 1rem;
+                padding: 1rem;
+            }
+
+            .app-icon {
+                width: 48px;
+                height: 48px;
+            }
+
+            .app-name {
+                font-size: 1rem;
+            }
+        }
+
+        /* 添加深色模式支持 */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary-color: #fff;
+                --background-color: #1a1a1a;
+                --shadow-color: rgba(0, 0, 0, 0.3);
+                --text-color: #999;
+            }
+
+            body {
+                color: var(--primary-color);
+            }
+
+            .header,
+            .nav,
+            .app-item {
+                background-color: #2d2d2d;
+            }
+
+            .search-bar input {
+                background-color: #333;
+                color: var(--primary-color);
+                border-color: #444;
+            }
+        }
+        
+        .sidebar {
+    position: fixed;
+    top: 0;
+    left: -280px;
+    width: 280px;
+    height: 100vh;
+    background-color: #fff;
+    box-shadow: 2px 0 8px var(--shadow-color);
+    transition: transform 0.3s ease;
+    overflow-y: auto;
+    z-index: 1001;
+    padding: 1rem 0;
+}
+
+.sidebar.active {
+    transform: translateX(280px);
+}
+
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 1rem 1rem;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 1rem;
+}
+
+.sidebar-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    color: var(--primary-color);
+}
+
+.sidebar-menu {
+    list-style: none;
+}
+
+.sidebar-menu li {
+    margin: 0.5rem 0;
+}
+
+.sidebar-menu a {
+    display: block;
+    padding: 0.75rem 1rem;
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: background-color 0.2s;
+}
+
+.sidebar-menu a:hover {
+    background-color: #f0f0f0;
+}
+
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: none;
+    z-index: 1000;
+    backdrop-filter: blur(2px);
+}
+
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+    .sidebar {
+        background-color: #2d2d2d;
+    }
+    
+    .sidebar-header {
+        border-bottom-color: #444;
+    }
+    
+    .sidebar-menu a:hover {
+        background-color: #3d3d3d;
+    }
+}
+
+/* 触摸设备优化 */
+@media (hover: none) {
+    .sidebar-menu a:active {
+        background-color: #f0f0f0;
+    }
+}
+
+/* 修改侧滑菜单按钮样式 */
+.toggle-sidebar {
+    font-size: 2rem; /* 增大字体大小 */
+    padding: 0.8rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--primary-color);
+    width: 60px; /* 增加按钮宽度 */
+    height: 60px; /* 增加按钮高度 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+}
+
+.toggle-sidebar:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+/* 修改浮动按钮样式 */
+.floating-button {
+    position: fixed;
+    right: 1.5rem;
+    width: 60px; /* 增加按钮宽度 */
+    height: 60px; /* 增加按钮高度 */
+    border-radius: 50%;
+    background-color: #fff;
+    border: none;
+    box-shadow: 0 2px 8px var(--shadow-color);
+    cursor: pointer;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem; /* 增大字体大小 */
+}
+
+/* 浮动按钮基础样式 */
+.floating-button {
+    position: fixed;
+    right: 1.5rem;
+    width: 60px; /* 增大按钮尺寸 */
+    height: 60px;
+    border-radius: 50%;
+    background-color: #fff;
+    border: none;
+    box-shadow: 0 2px 8px var(--shadow-color);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem; /* 增大图标尺寸 */
+    z-index: 999;
+}
+
+/* 刷新按钮位置 */
+.floating-refresh {
+    bottom: 6.5rem;
+}
+
+/* 返回顶部按钮位置 */
+.floating-top {
+    bottom: 1.5rem;
+}
+
+/* 按钮悬停效果 */
+.floating-button:hover {
+    background-color: #f0f0f0;
+    transform: scale(1.1);
+}
+
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+    .floating-button {
+        background-color: #2d2d2d;
+        color: var(--primary-color);
+    }
+
+    .floating-button:hover {
+        background-color: #3d3d3d;
+    }
+}
+
+/* 移动设备适配 */
+@media (max-width: 768px) {
+    .floating-button {
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
+        right: 1rem;
+    }
+
+    .floating-refresh {
+        bottom: 5.5rem;
+    }
+
+    .floating-top {
+        bottom: 1rem;
+    }
+}
+
+</style>
+
+<style>
+.card-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        justify-content: center;
+    }
+    
+    .card {
+    display: block;
+}
+
+    .card {
+        background: #fff;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        margin-bottom: 20px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        flex-basis: calc(33.333% - 20px); /* 默认为三列布局 */
+        max-width: calc(33.333% - 20px);
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+    }
+
+    .card-title {
+        font-size: 20px;
+        margin-bottom: 10px;
+        color: #1a73e8;
+    }
+
+    .card-content {
+        margin-bottom: 10px;
+    }
+
+    .card-info {
+        margin-bottom: 5px;
+        font-size: 14px;
+        color: #666;
+    }
+
+    .download-btn {
+        display: inline-block;
+        background: #1a73e8;
+        color: white;
+        padding: 8px 15px;
+        text-decoration: none;
+        border-radius: 5px;
+        margin-top: 10px;
+    }
+
+    .hidden {
+        display: none;
+    }
+
+    @media (max-width: 767px) {
+        .card {
+            flex-basis: calc(100% - 20px); /* 小屏幕为单列布局 */
+            max-width: calc(100% - 20px);
+        }
+    }
+
+    @media (min-width: 768px) and (max-width: 991px) {
+        .card {
+            flex-basis: calc(50% - 20px); /* 中等屏幕为两列布局 */
+            max-width: calc(50% - 20px);
+        }
+    }
+
+    @media (min-width: 992px) {
+        .card {
+            flex-basis: calc(25% - 20px); /* 大屏幕为四列布局 */
+            max-width: calc(25% - 20px);
+        }
+        
+        
+    </style>
+    
+    <style>
+    .download-btn {
+        display: inline-block;
+        background: #1a73e8;
+        color: white;
+        padding: 8px 15px;
+        text-decoration: none;
+        border-radius: 5px;
+        margin-top: 10px;
+    }
+    </style>
+    
+    <style>
+    /* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+    .card {
+        background-color: #2d2d2d; /* 深色背景 */
+        color: #fff; /* 白色文本 */
+    }
+
+    .card-title {
+        color: #1a73e8; /* 保持标题颜色 */
+    }
+
+    .card-info {
+        color: #bbb; /* 更浅的文本颜色 */
+    }
+
+    .download-btn {
+        background: #1a73e8; /* 下载按钮颜色 */
+        color: white; /* 按钮文本颜色 */
+    }
+
+    .download-btn:hover {
+        background: #1a5bb8; /* 按钮悬停效果 */
+    }
+}
+    </style>
+</head>
+<body>
+    <header class="header">
+        <button class="toggle-sidebar" aria-label="菜单" onclick="toggleSidebar()">☰</button>
+        <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="搜索应用" aria-label="搜索应用">
+    <button onclick="performSearch()">搜索</button>
+</div>
+    </header>
+
+    <nav class="nav">
+        <a href="https://huixiao666.github.io/A/">首页</a>
+        <a href="https://huixiao666.github.io/A1/">吃瓜</a>
+        <a href="https://huixiao666.github.io/A3/">车牌</a>
+        <a href="https://huixiao666.github.io/A2/">电脑</a>
+        <a href="https://huixiao666.github.io/A4/">搜图</a>
+        <a href="https://huixiao666.github.io/A6/">更新</a>
+        <a href="https://huixiao666.github.io/A7/">视频</a>
+    </nav>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2>搜索导航</h2>
+            <button class="sidebar-close" onclick="toggleSidebar()" aria-label="关闭菜单">×</button>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="https://baidu.com">百度</a></li>
+            <li><a href="https://m.sogou.com/">搜狗</a></li>
+            <li><a href="https://m.so.com/">360</a></li>
+            <li><a href="https://www.google.com">谷歌</a></li>
+            <li><a href="https://www.bing.com">bing</a></li>
+            <li><a href="https://search.yahoo.com/">yahoo</a></li>
+            <li><a href="https://www.ask.com/">ask</a></li>
+            <li><a href="https://duckduckgo.com/">duckduckgo</a></li>
+            <li><a href="https://yandex.com/">俄罗斯</a></li>
+            <li><a href="https://www.cilimiao.cn/">BT磁链</a></li>
+            <li><a href="http://lemonuo.top/">磁力柠檬</a></li>
+            <li><a href="https://theporndude.com/zh/top-porn-tube-sites">免费成人涩情网站</a></li>
+            <li><a href="https://theporndude.com/zh/hentai-streaming-sites">免费动漫涩情网站</a></li>
+            <li><a href="https://www.xbookcn.net/">成人中文免费小说</a></li>
+            <li><a href="http://www.caoliuxs.vip/">成人免费草榴小说</a></li>
+            <li><a href="https://sesebooks.com/">免费成人黄涩小说</a></li>
+            <li><a href="https://www.fanqianglu.com/free/cnnovel">免费成人涩情小说最全</a></li>
+            <li><a href="#">涩情性爱故事网站</a></li>
+        </ul>
+    </aside>
+
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+        <!-- 侧边栏内容 -->
+    </aside>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <main class="app-list">
+        <article class="app-item">
+            <div class="card-container" id="cardContainer">
+        <!-- 卡片内容 -->
+                <div class="card" id="card">
+            
+            <div class="card-content">
+                <div class="card-title">专搜3D图片内容</div>
+                <div class="card-info">
+              
+        </div>
+                <a href="http://3d.iqdb.org/" class="download-btn">官网</a>
+            </div>
+        </div>
+        
+        
+        
+        <div class="card" id="card">
+            
+            <div class="card-content">
+                <div class="card-title">多种服务图片搜图</div>
+                <div class="card-info">
+              
+        </div>
+                <a href="http://iqdb.org/" class="download-btn">官网</a>
+            </div>
+        </div>
+        
+    
+        
+        <div class="card" id="card">
+            
+            <div class="card-content">
+                <div class="card-title">二次元画像詳細検索</div>
+                <div class="card-info">
+              
+        </div>
+                <a href="https://ascii2d.net/" class="download-btn">官网</a>
+            </div>
+        </div>
+        
+        
+        
+        <div class="card" id="card">
+            
+            <div class="card-content">
+                <div class="card-title">素材反向识图</div>
+                <div class="card-info">
+              
+        </div>
+                <a href="https://www.everypixel.com/" class="download-btn">官网</a>
+            </div>
+        </div>
+        
+        
+        
+        <div class="card" id="card">
+            
+            <div class="card-content">
+                <div class="card-title">素材搜图</div>
+                <div class="card-info">
+              
+        </div>
+                <a href="https://unsplash.com/" class="download-btn">官网</a>
+            </div>
+        </div>
+        
+        
+        
+        <div class="card" id="card">
+            
+            <div class="card-content">
+                <div class="card-title">谷歌识图镜像网站</div>
+                <div class="card-info">
+              
+        </div>
+                <a href="https://soik.top/" class="download-btn">官网</a>
+            </div>
+        </div>
+        
+        
+        
+        <div class="card" id="card">
+            
+            <div class="card-content">
+                <div class="card-title">必应视觉搜寻</div>
+                <div class="card-info">
+              
+        </div>
+                <a href="https://cn.bing.com/visualsearch" class="download-btn">官网</a>
+            </div>
+        </div>
+        
+
+        
+        <div class="card" id="card">
+            
+            <div class="card-content">
+                <div class="card-title">老牌识图(被墙)</div>
+                
+                <div class="card-info">
+              
+        </div>
+                <a href="https://tineye.com/" class="download-btn">官网</a>
+            </div>
+        </div>
+        
+        
+        
+        <div class="card" id="card">
+            
+            <div class="card-content">
+                <div class="card-title">谷歌搜图(被翻)</div>
+                <div class="card-info">
+              
+        </div>
+                <a href="https://www.google.com.hk/imghp" class="download-btn">官网</a>
+            </div>
+        </div>
+        
+    
+        
+        <div class="card" id="card">
+            
+            <div class="card-content">
+                <div class="card-title">俄罗斯搜索引擎</div>
+                <div class="card-info">
+              
+        </div>
+                <a href="https://yandex.com/images/" class="download-btn">官网</a>
+            </div>
+        </div>
+        
+    
+        
+        <div class="card" id="card">
+            
+            <div class="card-content">
+                <div class="card-title">识图P站</div>
+                <div class="card-info">
+              
+        </div>
+                <a href="https://saucenao.com/" class="download-btn">官网</a>
+            </div>
+        </div>
+        
+    
+        
+        <div class="card" id="card">
+            
+            <div class="card-content">
+                <div class="card-title">动漫视频截图识别</div>
+                <div class="card-info">
+              
+        </div>
+                <a href="https://trace.moe/" class="download-btn">官网</a>
+            </div>
+        </div>
+        
+        
+        
+        <div class="card" id="card">
+            
+            <div class="card-content">
+                <div class="card-title">PPBC中国植物图像库</div>
+                <div class="card-info">
+              
+        </div>
+                <a href="https://ppbc.iplant.cn/" class="download-btn">官网</a>
+            </div>
+        </div>
+        
+        
+        
+        <div class="card" id="card">
+            
+            <div class="card-content">
+                <div class="card-title">百度识图</div>
+                <div class="card-info">
+              
+        </div>
+                <a href="https://graph.baidu.com/pcpage/index?tpl_from=pc/" class="download-btn">官网</a>
+            </div>
+        </div>
+        
+        
+        
+        <div class="card" id="card">
+            
+            <div class="card-content">
+                <div class="card-title">360识图</div>
+                <div class="card-info">
+              
+        </div>
+                <a href="https://m.image.so.com/" class="download-btn">官网</a>
+            </div>
+        </div>
+        
+        
+        
+        
+        <div class="card" id="card">
+            
+            <div class="card-content">
+                <div class="card-title">搜狗搜图</div>
+                <div class="card-info">
+              
+        </div>
+                <a href="https://pic.sogou.com/pic/index.jsp?v=5/" class="download-btn">官网</a>
+            </div>
+        </div>
+        
+            </article>
+    </main>
+
+    <button class="floating-button floating-refresh" onclick="refreshPage()" aria-label="刷新页面">↻</button>
+<button class="floating-button floating-top" onclick="scrollToTop()" aria-label="返回顶部">↑</button>
+
+<script>
+// 防抖函数
+function debounce(func, wait) {
+    let timeout;
+    return function (...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+}
+
+// 统一的搜索功能实现
+const performSearch = debounce(() => {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const cards = document.querySelectorAll('.card');
+
+    cards.forEach(card => {
+        const cardHeader = card.querySelector('.card-header')?.textContent.toLowerCase() || '';
+        const cardContent = card.querySelector('.card-content')?.textContent.toLowerCase() || '';
+        const isVisible = cardHeader.includes(searchTerm) || cardContent.includes(searchTerm);
+        card.style.display = isVisible ? 'block' : 'none';
+    });
+}, 300);
+
+// 添加搜索框事件监听
+document.addEventListener('DOMContentLoaded', () => {
+    // 搜索按钮点击事件
+    document.querySelector('.search-bar button').addEventListener('click', performSearch);
+    
+    // 搜索框回车事件
+    document.getElementById('searchInput').addEventListener('keyup', (event) => {
+        if (event.key === 'Enter') {
+            performSearch();
+        }
+    });
+});
+</script>
+<script>
+        
+        function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    const body = document.body;
+    
+    sidebar.classList.toggle('active');
+    
+    if (sidebar.classList.contains('active')) {
+        sidebarOverlay.style.display = 'block';
+        body.style.overflow = 'hidden'; // 防止背景滚动
+        
+        // 添加触摸滑动关闭支持
+        let startX = 0;
+        let currentX = 0;
+        
+        function handleTouchStart(e) {
+            startX = e.touches[0].clientX;
+        }
+        
+        function handleTouchMove(e) {
+            currentX = e.touches[0].clientX;
+            const diff = currentX - startX;
+            
+            if (diff < 0) {
+                sidebar.style.transform = `translateX(${diff}px)`;
+            }
+        }
+        
+        function handleTouchEnd() {
+            const diff = currentX - startX;
+            if (diff < -50) { // 如果滑动距离超过50px
+                toggleSidebar();
+            }
+            sidebar.style.transform = '';
+        }
+        
+        sidebar.addEventListener('touchstart', handleTouchStart);
+        sidebar.addEventListener('touchmove', handleTouchMove);
+        sidebar.addEventListener('touchend', handleTouchEnd);
+        
+    } else {
+        sidebarOverlay.style.display = 'none';
+        body.style.overflow = '';
+        
+        // 移除触摸事件监听
+        sidebar.removeEventListener('touchstart', handleTouchStart);
+        sidebar.removeEventListener('touchmove', handleTouchMove);
+        sidebar.removeEventListener('touchend', handleTouchEnd);
+    }
+}
+
+// 添加双击关闭功能
+document.getElementById('sidebar').addEventListener('dblclick', (e) => {
+    if (e.target.tagName !== 'A') { // 不是链接时才触发
+        toggleSidebar();
+    }
+});
+
+// 添加滑动手势支持
+let touchStartX = 0;
+document.addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0].clientX;
+});
+
+document.addEventListener('touchend', (e) => {
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchEndX - touchStartX;
+    
+    // 从屏幕左边缘向右滑动打开菜单
+    if (diff > 50 && touchStartX < 30) {
+        const sidebar = document.getElementById('sidebar');
+        if (!sidebar.classList.contains('active')) {
+            toggleSidebar();
+        }
+    }
+});
+    </script>
+    
+    <script>
+        function performSearch() {
+    var input = document.getElementById('searchInput');
+    var filter = input.value.toLowerCase();
+    var cardContainer = document.getElementById('cardContainer');
+    var cards = cardContainer.getElementsByClassName('card');
+
+    for (var i = 0; i < cards.length; i++) {
+        var card = cards[i];
+        var cardTitle = card.querySelector('.card-title').textContent.toLowerCase();
+        var cardInfo = card.querySelector('.card-info').textContent.toLowerCase();
+
+        if (cardTitle.includes(filter) || cardInfo.includes(filter)) {
+            card.classList.remove('hidden');
+        } else {
+            card.classList.add('hidden');
+        }
+    }
+}
+</script>
+
+<script>
+const performSearch = debounce(() => {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const cards = document.querySelectorAll('.card');
+
+    cards.forEach(card => {
+        const appName = card.querySelector('.app-name').textContent.toLowerCase();
+        const isVisible = appName.includes(searchTerm);
+        card.style.display = isVisible ? 'flex' : 'none';
+    });
+}, 300);
+</script>
+
+</body>
+</html>
